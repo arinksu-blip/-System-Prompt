@@ -1,0 +1,117 @@
+<div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8">
+  <header class="w-full max-w-6xl mb-8 text-center">
+    <h1 class="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+      Asystent Tekstowy AI
+    </h1>
+    <p class="mt-2 text-lg text-gray-400">Twoje inteligentne narzędzie do pracy z tekstem</p>
+  </header>
+
+  <main class="w-full max-w-6xl flex-grow grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Input Section -->
+    <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg p-1">
+      <div class="p-4 flex-grow">
+        <textarea
+          class="w-full h-full bg-transparent text-gray-200 placeholder-gray-500 focus:outline-none resize-none text-lg"
+          placeholder="Wpisz lub wklej tekst tutaj..."
+          [value]="inputText()"
+          (input)="inputText.set($any($event.target).value)"
+          rows="15"
+        ></textarea>
+      </div>
+      <div class="p-3 bg-gray-800/50 rounded-b-lg border-t border-gray-700 text-right text-gray-400 text-sm">
+        {{ inputText().length }} / 5000
+      </div>
+    </div>
+
+    <!-- Output Section -->
+    <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg p-1 relative">
+      @if (isLoading()) {
+        <div class="absolute inset-0 bg-gray-800/80 flex items-center justify-center z-10 rounded-lg">
+          <div class="loader"></div>
+        </div>
+      }
+      <div class="p-4 flex-grow">
+        <div class="w-full h-full bg-transparent text-gray-200 text-lg whitespace-pre-wrap">
+          {{ outputText() }}
+        </div>
+      </div>
+      <div class="p-3 bg-gray-800/50 rounded-b-lg border-t border-gray-700 flex justify-between items-center">
+        <span class="text-gray-400 text-sm">Wynik</span>
+        @if (outputText()) {
+          <button
+            (click)="copyToClipboard()"
+            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors text-sm font-semibold flex items-center"
+            [class.bg-green-600]="copyButtonText() === 'Skopiowano!'"
+            [disabled]="copyButtonText() === 'Skopiowano!'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            {{ copyButtonText() }}
+          </button>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Actions Section -->
+  <footer class="w-full max-w-6xl mt-6">
+    @if (error()) {
+      <div class="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-4" role="alert">
+        <strong class="font-bold">Błąd: </strong>
+        <span class="block sm:inline">{{ error() }}</span>
+      </div>
+    }
+
+    <div class="bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap justify-center sm:justify-start gap-2">
+        @for (action of actions; track action.id) {
+          <button
+            (click)="selectAction(action.id)"
+            class="px-3 py-2 rounded-md transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium"
+            [class]="selectedAction() === action.id ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'"
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="action.icon" />
+            </svg>
+            {{ action.label }}
+          </button>
+        }
+      </div>
+
+      @if (selectedAction() === 'translate') {
+        <div class="flex items-center gap-2">
+          <label for="language-select" class="text-gray-300 text-sm">Język docelowy:</label>
+          <select
+            id="language-select"
+            (change)="targetLanguage.set($any($event.target).value)"
+            class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2"
+          >
+            @for (lang of languages; track lang) {
+              <option [value]="lang" [selected]="lang === targetLanguage()">{{ lang }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <button
+        (click)="processText()"
+        [disabled]="isLoading() || !inputText()"
+        class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-lg shadow-lg transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        @if (isLoading()) {
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Przetwarzanie...</span>
+        } @else {
+          <span>Uruchom</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        }
+      </button>
+    </div>
+  </footer>
+</div>

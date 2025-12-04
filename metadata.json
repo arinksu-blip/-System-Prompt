@@ -1,0 +1,5 @@
+{
+  "name": "Asystent Tekstowy AI",
+  "description": "Inteligentny asystent do tłumaczenia, parafrazowania, ulepszania i streszczania tekstu z wykorzystaniem AI Gemini. Wpisz tekst, wybierz akcję i uzyskaj natychmiastowe rezultaty.",
+  "requestFramePermissions": []
+}
